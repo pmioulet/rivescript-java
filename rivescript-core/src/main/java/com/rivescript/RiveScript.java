@@ -22,6 +22,54 @@
 
 package com.rivescript;
 
+import static com.rivescript.regexp.Regexp.RE_ANY_TAG;
+import static com.rivescript.regexp.Regexp.RE_ARRAY;
+import static com.rivescript.regexp.Regexp.RE_BOT_VAR;
+import static com.rivescript.regexp.Regexp.RE_CALL;
+import static com.rivescript.regexp.Regexp.RE_CONDITION;
+import static com.rivescript.regexp.Regexp.RE_INHERITS;
+import static com.rivescript.regexp.Regexp.RE_META;
+import static com.rivescript.regexp.Regexp.RE_OPTIONAL;
+import static com.rivescript.regexp.Regexp.RE_PLACEHOLDER;
+import static com.rivescript.regexp.Regexp.RE_RANDOM;
+import static com.rivescript.regexp.Regexp.RE_REDIRECT;
+import static com.rivescript.regexp.Regexp.RE_SET;
+import static com.rivescript.regexp.Regexp.RE_SYMBOLS;
+import static com.rivescript.regexp.Regexp.RE_TOPIC;
+import static com.rivescript.regexp.Regexp.RE_USER_VAR;
+import static com.rivescript.regexp.Regexp.RE_WEIGHT;
+import static com.rivescript.regexp.Regexp.RE_ZERO_WITH_STAR;
+import static com.rivescript.session.SessionManager.HISTORY_SIZE;
+import static com.rivescript.util.StringUtils.countWords;
+import static com.rivescript.util.StringUtils.quoteMetacharacters;
+import static com.rivescript.util.StringUtils.stripNasties;
+import static java.util.Objects.requireNonNull;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rivescript.ast.ObjectMacro;
 import com.rivescript.ast.Root;
 import com.rivescript.ast.Topic;
@@ -45,53 +93,6 @@ import com.rivescript.sorting.SortBuffer;
 import com.rivescript.sorting.SortTrack;
 import com.rivescript.sorting.SortedTriggerEntry;
 import com.rivescript.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.rivescript.regexp.Regexp.RE_ANY_TAG;
-import static com.rivescript.regexp.Regexp.RE_ARRAY;
-import static com.rivescript.regexp.Regexp.RE_BOT_VAR;
-import static com.rivescript.regexp.Regexp.RE_CALL;
-import static com.rivescript.regexp.Regexp.RE_CONDITION;
-import static com.rivescript.regexp.Regexp.RE_INHERITS;
-import static com.rivescript.regexp.Regexp.RE_META;
-import static com.rivescript.regexp.Regexp.RE_OPTIONAL;
-import static com.rivescript.regexp.Regexp.RE_PLACEHOLDER;
-import static com.rivescript.regexp.Regexp.RE_RANDOM;
-import static com.rivescript.regexp.Regexp.RE_REDIRECT;
-import static com.rivescript.regexp.Regexp.RE_SET;
-import static com.rivescript.regexp.Regexp.RE_SYMBOLS;
-import static com.rivescript.regexp.Regexp.RE_TOPIC;
-import static com.rivescript.regexp.Regexp.RE_USER_VAR;
-import static com.rivescript.regexp.Regexp.RE_WEIGHT;
-import static com.rivescript.regexp.Regexp.RE_ZERO_WITH_STAR;
-import static com.rivescript.session.SessionManager.HISTORY_SIZE;
-import static com.rivescript.util.StringUtils.countWords;
-import static com.rivescript.util.StringUtils.quoteMetacharacters;
-import static com.rivescript.util.StringUtils.stripNasties;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A RiveScript interpreter written in Java.
@@ -792,10 +793,12 @@ public class RiveScript {
 			}
 		}
 		for (Map.Entry<String, List<String>> entry : ast.getBegin().getArray().entrySet()) {
-			if (entry.getValue().equals(UNDEF_TAG)) {
-				this.array.remove(entry.getKey());
-			} else {
-				this.array.put(entry.getKey(), entry.getValue());
+			for(String value : entry.getValue()) {
+				if (value.equals(UNDEF_TAG)) {
+					this.array.remove(entry.getKey());
+				} else {
+					this.array.put(entry.getKey(), entry.getValue());
+				}
 			}
 		}
 
@@ -2359,7 +2362,7 @@ public class RiveScript {
 				String inputPattern = "<input" + i + ">";
 				String replyPattern = "<reply" + i + ">";
 				History history = this.sessions.getHistory(username);
-				if (history == null) {
+				if (history != null) {
 					pattern = pattern.replace(inputPattern, history.getInput(i - 1));
 					pattern = pattern.replace(replyPattern, history.getReply(i - 1));
 				} else {

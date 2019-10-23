@@ -22,13 +22,7 @@
 
 package com.rivescript.lang;
 
-import com.rivescript.RiveScript;
-import com.rivescript.macro.ObjectHandler;
-import com.rivescript.util.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,7 +33,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
-import static java.util.Objects.requireNonNull;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rivescript.RiveScript;
+import com.rivescript.macro.ObjectHandler;
+import com.rivescript.util.StringUtils;
 
 /**
  * Perl programming language support for RiveScript-Java.
@@ -51,7 +52,7 @@ public class Perl implements ObjectHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(Perl.class);
 
-	private String rsp4j;                  // Path to the Perl script
+	private String rsp4j; // Path to the Perl script
 	private HashMap<String, String> codes; // Object codes
 
 	/**
@@ -90,7 +91,7 @@ public class Perl implements ObjectHandler {
 			// Transcode the user's data into a JSON object.
 			JSONObject vars = new JSONObject();
 			Map<String, String> data = rs.getUservars(user).getVariables();
-			Iterator it = data.keySet().iterator();
+			Iterator<String> it = data.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next().toString();
 				vars.put(key, data.get(key));
@@ -136,7 +137,7 @@ public class Perl implements ObjectHandler {
 
 			// Send back any new user vars.
 			JSONObject newVars = reply.getJSONObject("vars");
-			String[] keys = reply.getNames(newVars);
+			String[] keys = JSONObject.getNames(newVars);
 			for (int i = 0; i < keys.length; i++) {
 				String value = newVars.getString(keys[i]);
 				rs.setUservar(user, keys[i], value);
