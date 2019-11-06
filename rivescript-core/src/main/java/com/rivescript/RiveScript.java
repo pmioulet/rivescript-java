@@ -402,6 +402,10 @@ public class RiveScript {
 		return Collections.unmodifiableMap(handlers);
 	}
 
+	public Parser getParser() {
+		return this.parser;
+	}
+
 	/**
 	 * Defines a Java object macro.
 	 * <p>
@@ -751,6 +755,11 @@ public class RiveScript {
 	/*---------------------*/
 	/*-- Parsing Methods --*/
 	/*---------------------*/
+	private void parse(String filename, String[] code) throws ParserException {
+		// Get the abstract syntax tree of this file.
+		Root ast = this.parser.parse(filename, code);
+		this.parse(ast);
+	}
 
 	/**
 	 * Parses the RiveScript source code into the bot's memory.
@@ -759,10 +768,7 @@ public class RiveScript {
 	 * @param code     the lines of RiveScript source code
 	 * @throws ParserException in case of a parsing error
 	 */
-	private void parse(String filename, String[] code) throws ParserException {
-		// Get the abstract syntax tree of this file.
-		Root ast = this.parser.parse(filename, code);
-
+	public void parse(Root ast) throws ParserException {
 		// Get all of the "begin" type variables.
 		for (Map.Entry<String, String> entry : ast.getBegin().getGlobal().entrySet()) {
 			if (entry.getValue().equals(UNDEF_TAG)) {
@@ -793,12 +799,10 @@ public class RiveScript {
 			}
 		}
 		for (Map.Entry<String, List<String>> entry : ast.getBegin().getArray().entrySet()) {
-			for(String value : entry.getValue()) {
-				if (value.equals(UNDEF_TAG)) {
-					this.array.remove(entry.getKey());
-				} else {
-					this.array.put(entry.getKey(), entry.getValue());
-				}
+			if(entry.getValue().contains(UNDEF_TAG)) {
+				this.array.remove(entry.getKey());
+			} else {
+				this.array.put(entry.getKey(), entry.getValue());
 			}
 		}
 
