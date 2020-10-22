@@ -2029,9 +2029,14 @@ public class RiveScript {
 				}
 			} else if (tag.equals("get")) {
 				// <get> user vars.
-				insert = this.sessions.get(username, data);
-				if (insert == null) {
+				String[] data_parts = data.split(" ");
+				insert = this.sessions.get(username, data_parts[0]);
+				boolean insertIsEmpty = (insert == null || insert.length()==0);
+				if (insertIsEmpty && data_parts.length==1) {
 					insert = UNDEFINED;
+				}
+				else if (insertIsEmpty && data_parts.length>1) {
+					insert = StringUtils.join(Arrays.copyOfRange(data_parts, 1, data_parts.length), " ");
 				}
 			} else {
 				// Unrecognized tag; preserve it.
