@@ -1391,7 +1391,7 @@ public class RiveScript {
 	 * @param step     the recursion depth counter
 	 * @return the reply
 	 */
-	private String getReply(String username, String message, boolean isBegin, int step) {
+	public String getReply(String username, String message, boolean isBegin, int step) {
 		// Needed to sort replies?
 		if (this.sorted.getTopics().size() == 0) {
 			logger.warn("You forgot to call sortReplies()!");
